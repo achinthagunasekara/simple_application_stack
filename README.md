@@ -21,6 +21,7 @@ To secure the application, the following measures have been taken.
 ### Prerequisites
 
 * AWS accout with a VPC already setup
+* Private subnets application servers are deployed to must have internet access via a NAT box/NAT gateway
 * Please ensure you have installed the latest version of Ansible on the machine where you’ll be building the stack from.
 * IMPORTANT! Please note that only RHEL/CentOS 7 images are currently supported.
 
