@@ -36,7 +36,6 @@ ansible-playbook -vvv plays/create_cloud_formation_stack.yml --extra-vars '{"pro
 
 Please ensure to provide valid inputs to following parameters from your AWS account.
 
-```
 | Config Iteam | Description |
 |--------------|-------------|
 | Profile | AWS credentials profile to use |
@@ -48,7 +47,6 @@ Please ensure to provide valid inputs to following parameters from your AWS acco
 | ImageId | AMI to be used as the base image (RHEL/CentOS 7 AMI ID) |
 | KeyName | Key pair to be used for instances |
 | ProvisioningRepo | Git repo to pull provisioning code from |
-```
 
 ### Accessing the Application
 
