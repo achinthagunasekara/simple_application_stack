@@ -20,9 +20,9 @@ To secure the application, the following measures have been taken.
 
 ### Prerequisites
 
-Please ensure you have installed the latest version of Ansible on the machine where you’ll be building the stack from.
-
-IMPORTANT! Please note that only RHEL/CentOS 7 images are currently supported.
+* AWS accout with a VPC already setup
+* Please ensure you have installed the latest version of Ansible on the machine where you’ll be building the stack from.
+* IMPORTANT! Please note that only RHEL/CentOS 7 images are currently supported.
 
 ### Commands to Run
 
@@ -31,20 +31,23 @@ Run the following commands to build a stack.
 ```bash
 git clone https://github.com/achinthagunasekara/simple_application_stack.git
 cd ansible
-ansible-playbook -vvv plays/create_cloud_formation_stack.yml --extra-vars '{"profile": "sandpit", "stack_name": "archie-simpe-application-stack-2", "template": "/Git_Workspace/simple_application_stack/cf_templates/simple_application_stack.yml", "template_parameters": {"VpcId": "vpc-123456", "Subnets": "subnet-123456", "InstanceType": "t2.micro", "ImageId": "ami-67589505", "KeyName": "archie-sandpit"}}'
+ansible-playbook -vvv plays/create_cloud_formation_stack.yml --extra-vars '{"profile": "archie-sandpit", "stack_name": "archie-simpe-application-stack-1", "template": "/Git_Workspace/simple_application_stack/cf_templates/simple_application_stack.yml", "template_parameters": {"VpcId": "vpc-123456", "Subnets": "subnet-123456", "InstanceType": "t2.micro", "ImageId": "ami-67589505", "KeyName": "archie-sandpit", "ProvisioningRepo": "https://github.com/achinthagunasekara/simple_application_stack.git"}}'
 ```
 
 Please ensure to provide valid inputs to following parameters from your AWS account.
 
 ```
-Profile – AWS credentials profile to use
-stack_name – Name of the stack
-template – Full path the template file located under cf_templates
-VpcId – VPC to build the application stack in
-Subnets – Subnets to spread application server instances accross
-InstanceType – Type of EC2 instance to use
-ImageId – AMI to be used as the base image (RHEL/CentOS 7 AMI ID)
-KeyName – Key pair to be used for instances
+| Config Iteam | Description |
+|--------------|-------------|
+| Profile | AWS credentials profile to use |
+| stack_name | Name of the stack |
+| template | Full path the template file located under cf_templates |
+| VpcId | VPC to build the application stack in |
+| Subnets | Subnets to spread application server instances accross |
+| InstanceType | Type of EC2 instance to use |
+| ImageId | AMI to be used as the base image (RHEL/CentOS 7 AMI ID) |
+| KeyName | Key pair to be used for instances |
+| ProvisioningRepo | Git repo to pull provisioning code from |
 ```
 
 ### Accessing the Application
