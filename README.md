@@ -36,7 +36,7 @@ ansible-playbook -vvv plays/create_cloud_formation_stack.yml --extra-vars '{"pro
 
 Please ensure to provide valid inputs to following parameters from your AWS account.
 
-| Config Iteam | Description |
+| Config Item | Description |
 |--------------|-------------|
 | Profile | AWS credentials profile to use |
 | stack_name | Name of the stack |
