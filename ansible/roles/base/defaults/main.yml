@@ -1,0 +1,3 @@
+---
+aws_cfn_version: "1.4-8"
+aws_cfn_bootstrap_url: "https://s3.amazonaws.com/cloudformation-examples/aws-cfn-bootstrap-{{ aws_cfn_version }}.tar.gz"

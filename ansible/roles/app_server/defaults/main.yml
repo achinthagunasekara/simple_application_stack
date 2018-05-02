@@ -1,0 +1,4 @@
+---
+app_repo: "https://github.com/achinthagunasekara/simple-sinatra-app.git"
+app_dir: "/var/local/simple-sinatra-app"
+app_port: 9292

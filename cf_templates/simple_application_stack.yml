@@ -1,0 +1,128 @@
+AWSTemplateFormatVersion: 2010-09-09
+Description: This template creates simple web application stack
+Parameters:
+    VpcId:
+        Type: AWS::EC2::VPC::Id
+        Description: VPC ID to build the stack in
+        ConstraintDescription: Must be the VPC Id of an existing VPC in this account
+    Subnets:
+        Type: CommaDelimitedList
+        Description: The list of subnet IDs in above VPC
+        ConstraintDescription: must be a list of at least two existing subnets associated with     at least two different availability zones
+    InstanceType:
+        Type: String
+        Description: EC2 instance type to be used as application servers
+        AllowedValues:
+            - t2.micro
+            - t2.small
+        ConstraintDescription: Must be a valid EC2 instance type from the list above
+    ImageId:
+        Type: String
+        Description: AMI to be used for building the application servers
+        ConstraintDescription: must be a valid AMI ID
+    KeyName:
+        Type: AWS::EC2::KeyPair::KeyName
+        Description: The EC2 Key Pair to allow SSH access to application servers
+        ConstraintDescription: must be the name of an existing EC2 KeyPair
+    AppAsgMinSize:
+        Type: Number
+        Description: Min size of the application server ASG
+        Default: 2
+        ConstraintDescription: must be an integer
+    AppAsgDesiredCapacity:
+        Type: Number
+        Description: Desired size of the application server ASG
+        Default: 2
+        ConstraintDescription: must be an integer
+    AppAsgMaxSize:
+        Type: Number
+        Description: Max size of the application server ASG
+        Default: 2
+        ConstraintDescription: must be an integer
+    ProvisioningRepo:
+        Type: String
+        Description: Repo to clone provisioning code from
+        Default: https://github.com/achinthagunasekara/simple_application_stack.git
+        ConstraintDescription: git repo with provisioning code base
+Resources:
+    ElbSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Security group for the ELB
+            VpcId: !Ref VpcId
+            SecurityGroupIngress:
+                - IpProtocol: tcp
+                  FromPort: 80
+                  ToPort: 80
+                  CidrIp: 0.0.0.0/0
+    AppServerSecurityGroup:
+        Type: AWS::EC2::SecurityGroup
+        Properties:
+            GroupDescription: Security group for the ELB
+            VpcId: !Ref VpcId
+            SecurityGroupIngress:
+                - IpProtocol: tcp
+                  FromPort: 9292
+                  ToPort: 9292
+                  SourceSecurityGroupId: !Ref ElbSecurityGroup
+    AppElb:
+        Type: AWS::ElasticLoadBalancing::LoadBalancer
+        Properties:
+            SecurityGroups:
+                - !Ref ElbSecurityGroup
+            Subnets: !Ref Subnets
+            Listeners:
+                - LoadBalancerPort: 80
+                  Protocol: HTTP
+                  InstancePort: 9292
+            HealthCheck:
+                Target: HTTP:9292/
+                HealthyThreshold: 3
+                UnhealthyThreshold: 5
+                Interval: 30
+                Timeout: 5
+    AppLc:
+        Type: AWS::AutoScaling::LaunchConfiguration
+        Properties:
+            KeyName: !Ref KeyName
+            ImageId: !Ref ImageId
+            SecurityGroups:
+                - !Ref AppServerSecurityGroup
+            InstanceType: !Ref InstanceType
+            AssociatePublicIpAddress: true
+            UserData:
+                Fn::Base64: !Sub |
+                    #!/bin/bash -x
+                    cd /var/local
+                    curl -o epel.rpm https://dl.fedoraproject.org/pub/epel/epel-release-latest-7.noarch.rpm
+                    yum -y install epel.rpm
+                    yum -y install ansible facter git
+                    git clone ${ProvisioningRepo}
+                    cd simple_application_stack/ansible
+                    ansible-playbook -vvv plays/app_server.yml
+                    cfn-signal -e $? -r 'Application server configuration' '${AppWaitHandle}'
+    AppAsg:
+        Type: AWS::AutoScaling::AutoScalingGroup
+        Properties:
+            VPCZoneIdentifier: !Ref Subnets
+            LaunchConfigurationName: !Ref AppLc
+            MinSize: !Ref AppAsgMinSize
+            DesiredCapacity: !Ref AppAsgDesiredCapacity
+            MaxSize: !Ref AppAsgMaxSize
+            LoadBalancerNames:
+                - !Ref AppElb
+            HealthCheckType: ELB
+            HealthCheckGracePeriod: 600
+    AppWaitHandle:
+        Type: AWS::CloudFormation::WaitConditionHandle
+    AppWaitCondition:
+        Type: AWS::CloudFormation::WaitCondition
+        DependsOn: AppAsg
+        Properties:
+            Handle: !Ref AppWaitHandle
+            Timeout: "600"
+            Count: !Ref AppAsgDesiredCapacity
+Outputs:
+    URL:
+        Description: URL to the application
+        Value: !GetAtt AppElb.DNSName

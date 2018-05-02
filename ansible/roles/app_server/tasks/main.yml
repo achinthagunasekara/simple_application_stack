@@ -1,0 +1,33 @@
+---
+- name: Create application directory
+  file:
+    path: "{{ app_dir }}"
+    state: directory
+    mode: 0755
+
+- name: Clone application files from Github
+  git:
+    repo: "{{ app_repo }}"
+    dest: "{{ app_dir }}"
+
+- name: Setup the application
+  command: "{{ item }}"
+  args:
+    chdir: "{{ app_dir }}"
+  with_items:
+    - gem install bundler
+
+- name: Create config files and start up scripts
+  template:
+    src: "{{ item.src }}"
+    dest: "{{ item.dest }}"
+    mode: 0755
+  with_items:
+    - { src: "simple-sinatra-app.service", dest: "/usr/lib/systemd/system/simple-sinatra-app.service" }
+    - { src: "simple-sinatra-app-init.sh", dest: "{{ app_dir }}/simple-sinatra-app-init.sh" }
+
+- name: Enable and start application
+  service:
+    name: simple-sinatra-app.service
+    enabled: yes
+    state: started

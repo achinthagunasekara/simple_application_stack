@@ -1,0 +1,11 @@
+---
+- name: Install base dependencies
+  yum:
+    name:
+      - vim
+      - python
+      - python2-pip
+
+- name: Install aws_cfn_bootstrap
+  pip:
+    name: "{{ aws_cfn_bootstrap_url }}"

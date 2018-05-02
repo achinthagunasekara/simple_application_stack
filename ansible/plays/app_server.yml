@@ -1,0 +1,10 @@
+---
+- hosts: localhost
+  connection: local
+  become: yes
+  become_user: 'root'
+  gather_facts: true
+  roles:
+    - RHEL7_CIS_devel
+    - base
+    - app_server

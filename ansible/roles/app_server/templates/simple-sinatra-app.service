@@ -1,0 +1,11 @@
+[Unit]
+Description=Simple Sinatra App
+
+[Service]
+Type=simple
+ExecStart={{ app_dir }}/simple-sinatra-app-init.sh
+Restart=always
+TimeoutSec=10
+
+[Install]
+WantedBy=multi-user.target
