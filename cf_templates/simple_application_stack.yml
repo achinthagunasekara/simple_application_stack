@@ -89,7 +89,7 @@ Resources:
             SecurityGroups:
                 - !Ref AppServerSecurityGroup
             InstanceType: !Ref InstanceType
-            AssociatePublicIpAddress: false
+            AssociatePublicIpAddress: true
             UserData:
                 Fn::Base64: !Sub |
                     #!/bin/bash -x
@@ -100,7 +100,7 @@ Resources:
                     git clone ${ProvisioningRepo}
                     cd simple_application_stack/ansible
                     ansible-playbook -vvv plays/app_server.yml
-                    cfn-signal -e $? -r 'Application server configuration' '${AppWaitHandle}'
+                    cfn-signal -e $? --stack '${AWS::StackName}' --region ${AWS::Region} --resource 'AppAsg'
     AppAsg:
         Type: AWS::AutoScaling::AutoScalingGroup
         Properties:
@@ -112,16 +112,14 @@ Resources:
             LoadBalancerNames:
                 - !Ref AppElb
             HealthCheckType: ELB
-            HealthCheckGracePeriod: 600
-    AppWaitHandle:
-        Type: AWS::CloudFormation::WaitConditionHandle
-    AppWaitCondition:
-        Type: AWS::CloudFormation::WaitCondition
-        DependsOn: AppAsg
-        Properties:
-            Handle: !Ref AppWaitHandle
-            Timeout: "600"
-            Count: !Ref AppAsgDesiredCapacity
+            HealthCheckGracePeriod: 900
+        CreationPolicy:
+            ResourceSignal:
+                Count: !Ref AppAsgDesiredCapacity
+                Timeout: PT15M
+        UpdatePolicy:
+            AutoScalingReplacingUpdate:
+                WillReplace: true
 Outputs:
     URL:
         Description: URL to the application
